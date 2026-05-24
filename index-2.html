@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Life OS">
+<meta name="theme-color" content="#0a0a0a">
+<title>Master Life OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overscroll-behavior:none;}
+body{font-family:'DM Sans',sans-serif;background:#0a0a0a;color:#e8e0d0;max-width:480px;margin:0 auto;min-height:100vh;}
+
+/* NAV */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#0a0a0a;border-top:1px solid #1a1a1a;display:grid;grid-template-columns:repeat(5,1fr);z-index:200;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-btn{padding:0.6rem 0;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:opacity 0.15s;}
+.nav-btn:active{opacity:0.7;}
+.nav-icon{font-size:1.2rem;line-height:1;}
+.nav-label{font-family:'DM Mono',monospace;font-size:0.38rem;letter-spacing:0.08em;text-transform:uppercase;color:#333;}
+.nav-btn.active .nav-label{color:#c8962a;}
+.nav-btn.active .nav-icon{filter:brightness(1.4);}
+.nav-badge{position:absolute;top:-2px;right:8px;width:8px;height:8px;border-radius:50%;background:#b43c3c;}
+
+/* SCREENS */
+.screen{display:none;padding-top:0;padding-bottom:80px;min-height:100vh;overflow-y:auto;}
+.screen.active{display:block;}
+
+/* HEADERS */
+.screen-header{background:#0a0a0a;padding:1rem 1.25rem 0.75rem;border-bottom:1px solid #1a1a1a;position:sticky;top:0;z-index:100;}
+.sh-row{display:flex;justify-content:space-between;align-items:center;}
+.sh-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:#e8e0d0;font-weight:400;}
+.sh-title span{color:#c8962a;}
+.sh-date{font-family:'DM Mono',monospace;font-size:0.48rem;color:#333;letter-spacing:0.08em;margin-top:2px;}
+.sh-score{font-family:'Playfair Display',serif;font-size:1.5rem;text-align:right;line-height:1;}
+.sh-sub{font-family:'DM Mono',monospace;font-size:0.44rem;color:#333;margin-top:2px;}
+
+/* CONTENT AREA */
+.pad{padding:1rem 1.25rem;}
+
+/* CARDS */
+.card{background:#111;border:1px solid #1e1e1e;border-radius:8px;margin-bottom:0.85rem;overflow:hidden;}
+.card-hdr{padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:center;}
+.card-title{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:400;}
+.card-body{padding:0.75rem 1rem;}
+
+/* MINI SCORES */
+.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:0.75rem 0;}
+.mini-cell{border-radius:6px;padding:6px 8px;cursor:pointer;}
+.mc-label{font-family:'DM Mono',monospace;font-size:0.42rem;letter-spacing:0.08em;text-transform:uppercase;}
+.mc-val{font-family:'Playfair Display',serif;font-size:0.95rem;color:#e8e0d0;line-height:1.2;}
+
+/* TASK ROWS */
+.task-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:opacity 0.2s;}
+.task-row:last-child{border-bottom:none;}
+.task-row.done{opacity:0.35;}
+.chk{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:1px;border:1.5px solid #333;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700;transition:all 0.15s;}
+.task-text{font-size:0.73rem;color:#e8e0d0;line-height:1.5;}
+.task-row.done .task-text{text-decoration:line-through;}
+.note-field{width:100%;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:4px;padding:7px 9px;font-size:0.68rem;color:#888;resize:none;font-family:'DM Sans',sans-serif;outline:none;line-height:1.5;margin-top:0.5rem;}
+
+/* PROG BAR */
+.prog{height:4px;background:#1e1e1e;border-radius:2px;overflow:hidden;margin-top:4px;}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.4s ease;}
+
+/* SECTION LABEL */
+.sec{font-family:'DM Mono',monospace;font-size:0.46rem;letter-spacing:0.14em;text-transform:uppercase;color:#333;margin:1rem 0 0.5rem;padding-bottom:0.4rem;border-bottom:1px solid #1a1a1a;}
+
+/* HAND SCREEN */
+.hand-header{text-align:center;padding:1.5rem 1.25rem 1rem;border-bottom:1px solid #1a1a1a;}
+.hand-seal{width:60px;height:60px;border-radius:50%;border:1.5px solid rgba(180,140,60,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;background:radial-gradient(circle,rgba(180,140,60,0.08) 0%,transparent 70%);}
+.hand-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:#c8a84a;font-weight:400;}
+.hand-sub{font-family:'DM Mono',monospace;font-size:0.46rem;color:#2a2520;letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;}
+.play-btn{width:56px;height:56px;border-radius:50%;border:1.5px solid rgba(180,140,60,0.4);background:radial-gradient(circle,rgba(180,140,60,0.1) 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:all 0.2s;margin:0 auto;}
+.play-btn.playing{border-color:#c8a84a;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(180,140,60,0.2);}50%{box-shadow:0 0 0 8px rgba(180,140,60,0);}}
+.brief-card{background:#0c0b10;border:1px solid rgba(180,140,60,0.15);border-radius:8px;margin-bottom:0.85rem;overflow:hidden;}
+.brief-section{margin-bottom:1rem;}
+.brief-section:last-child{margin-bottom:0;}
+.bs-label{font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8a84a;margin-bottom:0.4rem;}
+.bs-text{font-family:'Playfair Display',serif;font-size:0.82rem;color:#8a8070;line-height:1.7;font-style:italic;}
+.bs-text em{color:#e8e0d0;font-style:normal;}
+.bs-text strong{color:#c8a84a;font-style:normal;}
+.flag{background:#080808;border:1px solid #1a1a1a;border-radius:6px;padding:0.75rem;margin-bottom:0.5rem;border-left:3px solid;}
+.flag-red{border-left-color:#b43c3c;}
+.flag-amber{border-left-color:#c8a84a;}
+.flag-green{border-left-color:#3c8c50;}
+.flag-title{font-size:0.72rem;color:#e8e0d0;font-weight:500;margin-bottom:2px;}
+.flag-text{font-size:0.65rem;color:#444;line-height:1.5;}
+.prog-track{height:2px;background:rgba(180,140,60,0.1);border-radius:1px;overflow:hidden;margin:0.75rem 0 0.25rem;}
+.prog-fill-gold{height:100%;background:linear-gradient(90deg,#8a6820,#c8a84a);border-radius:1px;width:0%;transition:width 0.3s;}
+.time-row{display:flex;justify-content:space-between;}
+.time-lbl{font-family:'DM Mono',monospace;font-size:0.42rem;color:#2a2520;}
+
+/* FAMILY SCREEN */
+.req-card{background:#111;border:1px solid #1e1e1e;border-radius:8px;margin-bottom:0.75rem;overflow:hidden;}
+.req-hdr{padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:flex-start;}
+.req-who{font-family:'DM Mono',monospace;font-size:0.46rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;}
+.req-title-text{font-size:0.82rem;color:#e8e0d0;font-weight:500;}
+.req-time-text{font-size:0.58rem;color:#333;margin-top:2px;}
+.status-pill{font-family:'DM Mono',monospace;font-size:0.42rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;flex-shrink:0;}
+.pill-p{background:rgba(200,168,74,0.1);color:#c8a84a;}
+.pill-a{background:rgba(74,173,106,0.1);color:#4aad6a;}
+.pill-d{background:rgba(180,60,60,0.1);color:#d07070;}
+.req-details{padding:0 1rem 0.75rem;}
+.rd-row{display:flex;gap:8px;margin-bottom:4px;}
+.rd-key{font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.06em;text-transform:uppercase;color:#333;width:64px;flex-shrink:0;padding-top:1px;}
+.rd-val{font-size:0.68rem;color:#888;line-height:1.4;}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 1rem 0.75rem;}
+.approve-btn{padding:0.55rem;border-radius:6px;border:1px solid rgba(74,173,106,0.3);background:rgba(74,173,106,0.08);color:#4aad6a;font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;}
+.deny-btn{padding:0.55rem;border-radius:6px;border:1px solid rgba(180,60,60,0.25);background:rgba(180,60,60,0.06);color:#d07070;font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;}
+
+/* FINANCIAL SCREEN */
+.fin-metric{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:1rem;}
+.fm-item{background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:0.65rem 0.75rem;text-align:center;}
+.fm-label{font-family:'DM Mono',monospace;font-size:0.4rem;letter-spacing:0.08em;text-transform:uppercase;color:#333;margin-bottom:3px;}
+.fm-val{font-family:'Playfair Display',serif;font-size:0.95rem;line-height:1;}
+.fm-sub{font-size:0.5rem;color:#333;margin-top:2px;}
+.grocery-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1a1a;}
+.grocery-row:last-child{border-bottom:none;}
+.gr-check{width:16px;height:16px;border-radius:3px;border:1px solid #333;background:#0a0a0a;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:#4aad6a;}
+.gr-name{flex:1;font-size:0.72rem;color:#e8e0d0;}
+.gr-who{font-family:'DM Mono',monospace;font-size:0.42rem;color:#333;}
+.gr-store{font-family:'DM Mono',monospace;font-size:0.42rem;color:#4aad6a;margin-left:4px;}
+.store-order{background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:0.75rem;margin-bottom:0.6rem;}
+.so-hdr{display:flex;justify-content:space-between;margin-bottom:0.4rem;}
+.so-name{font-size:0.78rem;color:#e8e0d0;font-weight:500;}
+.so-total{font-family:'DM Mono',monospace;font-size:0.7rem;color:#4aad6a;}
+.so-items{font-size:0.65rem;color:#444;margin-bottom:0.5rem;line-height:1.5;}
+.so-btns{display:flex;gap:6px;}
+.so-btn{flex:1;padding:6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.42rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;}
+.so-primary{background:linear-gradient(135deg,#1a6a40,#3aad6a);color:#0a0a0a;}
+.so-secondary{background:rgba(74,173,106,0.08);border:1px solid rgba(74,173,106,0.2)!important;color:#4aad6a;}
+.alert-item{background:#0a0a0a;border-left:3px solid;border-radius:0 6px 6px 0;padding:0.7rem 0.85rem;margin-bottom:0.5rem;}
+.ai-green{border-color:#3c8c50;}
+.ai-amber{border-color:#c8a84a;}
+.ai-red{border-color:#b43c3c;}
+.ai-title{font-size:0.72rem;color:#e8e0d0;font-weight:500;margin-bottom:2px;}
+.ai-text{font-size:0.65rem;color:#444;line-height:1.5;}
+
+/* FORMS */
+.field{margin-bottom:0.75rem;}
+.field label{font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:#333;margin-bottom:0.35rem;display:block;}
+.field input,.field select,.field textarea{width:100%;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:6px;padding:9px 11px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:0.78rem;outline:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#c8962a;}
+.field select option{background:#0a0a0a;}
+.field textarea{resize:none;line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-full{width:100%;padding:0.85rem;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:opacity 0.2s;}
+.btn-gold{background:linear-gradient(135deg,#8a6820,#c8a84a);color:#0a0a0a;}
+.btn-green{background:linear-gradient(135deg,#1a6a40,#3aad6a);color:#0a0a0a;}
+.btn-full:active{opacity:0.85;}
+
+/* HISTORY */
+.hist-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #1a1a1a;}
+.hist-date{font-family:'DM Mono',monospace;font-size:0.5rem;color:#333;width:76px;flex-shrink:0;}
+.hist-date.today{color:#c8962a;}
+.hist-bar{flex:1;height:6px;background:#1a1a1a;border-radius:3px;overflow:hidden;}
+.hist-fill{height:100%;border-radius:3px;}
+.hist-pct{font-family:'DM Mono',monospace;font-size:0.5rem;width:30px;text-align:right;flex-shrink:0;}
+
+/* NORTH STAR */
+.north-star{background:linear-gradient(135deg,#0a0a0a,#1a1208);border:1px solid rgba(200,150,42,0.2);border-radius:8px;padding:1.1rem;margin-top:1rem;}
+.ns-label{font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8a84a;margin-bottom:0.5rem;}
+.ns-text{font-family:'Playfair Display',serif;font-size:0.85rem;color:#e8e0d0;line-height:1.65;}
+.ns-text em{color:#c8a84a;font-style:normal;}
+.ns-targets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:0.75rem;}
+.ns-t{background:rgba(255,255,255,0.03);border-radius:4px;padding:7px 8px;}
+.ns-tl{font-family:'DM Mono',monospace;font-size:0.42rem;color:#333;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;}
+.ns-tv{font-family:'Playfair Display',serif;font-size:0.85rem;color:#c8a84a;}
+.ns-ts{font-size:0.52rem;color:#333;margin-top:1px;}
+
+/* SUB TABS */
+.sub-tabs{display:flex;border-bottom:1px solid #1a1a1a;overflow-x:auto;background:#0a0a0a;}
+.sub-tab{flex-shrink:0;padding:0.5rem 0.75rem;background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.07em;text-transform:uppercase;color:#333;border-bottom:2px solid transparent;}
+.sub-tab.active{color:#c8962a;border-bottom-color:#c8962a;}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e1e1e;border:1px solid #2a2a2a;color:#e8e0d0;padding:0.6rem 1.25rem;border-radius:20px;font-size:0.72rem;z-index:500;display:none;white-space:nowrap;max-width:90vw;text-align:center;}
+.toast.show{display:block;animation:toastIn 0.2s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.empty{font-size:0.7rem;color:#333;font-style:italic;padding:1rem 0;text-align:center;}
+.div{height:1px;background:#1a1a1a;margin:0.75rem 0;}
+.alert-dot{width:5px;height:5px;border-radius:50%;background:#b43c3c;animation:blink 2s infinite;display:inline-block;margin-right:5px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCREEN 1: TODAY (Life OS) -->
+<div class="screen active" id="screen-today">
+  <div class="screen-header">
+    <div class="sh-row">
+      <div>
+        <div class="sh-title">Master Life <span>OS</span></div>
+        <div class="sh-date" id="today-date"></div>
+      </div>
+      <div>
+        <div class="sh-score" id="total-pct">0%</div>
+        <div class="sh-sub" id="total-sub">0/20 · 0d streak</div>
+      </div>
+    </div>
+    <div class="mini-grid" id="mini-grid"></div>
+  </div>
+  <div class="pad" id="today-content"></div>
+</div>
+
+<!-- SCREEN 2: THE HAND -->
+<div class="screen" id="screen-hand">
+  <div class="hand-header">
+    <div class="hand-seal">⚜️</div>
+    <div class="hand-title">The Hand</div>
+    <div class="hand-sub">Daily Intelligence · Always Watching</div>
+  </div>
+  <div class="pad">
+    <div class="brief-card">
+      <div style="padding:1.25rem;border-bottom:1px solid rgba(180,140,60,0.08)">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.85rem">
+          <div class="play-btn" id="play-btn" onclick="handlePlay()"><span id="play-icon">▶</span></div>
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:0.88rem;color:#c8a84a">Morning Intelligence Brief</div>
+            <div class="hand-sub" id="player-sub" style="margin-top:3px">Tap to hear The Hand speak</div>
+          </div>
+        </div>
+        <div class="prog-track"><div class="prog-fill-gold" id="hand-progress"></div></div>
+        <div class="time-row"><span class="time-lbl" id="time-cur">0:00</span><span class="time-lbl" id="time-tot">—</span></div>
+      </div>
+      <div style="padding:1.1rem 1.25rem" id="brief-sections"></div>
+    </div>
+
+    <div class="sec"><span class="alert-dot"></span>Intelligence Flags</div>
+    <div id="hand-flags"></div>
+
+    <div style="background:#0c0c08;border:1px solid rgba(180,140,60,0.18);border-radius:8px;padding:1rem;margin-bottom:0.85rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8a84a;margin-bottom:0.5rem">⚑ Today's Priority</div>
+      <div style="font-family:'Playfair Display',serif;font-size:0.88rem;color:#e8e0d0;line-height:1.65" id="hand-priority"></div>
+    </div>
+
+    <div style="background:#080608;border:1px solid rgba(180,60,60,0.15);border-radius:8px;padding:1rem;margin-bottom:0.85rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:#b43c3c;margin-bottom:0.5rem">◈ Risk Watch</div>
+      <div style="font-family:'Playfair Display',serif;font-size:0.84rem;color:#b09090;line-height:1.65;font-style:italic" id="hand-risk"></div>
+    </div>
+
+    <div class="sec">📅 Add Calendar Event</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="field"><label>Event Title</label><input type="text" id="ev-title" placeholder="Client showing, listing appointment..." /></div>
+        <div class="two-col">
+          <div class="field"><label>Date & Time</label><input type="datetime-local" id="ev-time" /></div>
+          <div class="field"><label>Who / Where</label><input type="text" id="ev-who" placeholder="Client name, address..." /></div>
+        </div>
+        <div class="field"><label>Key Notes — The Hand will use these</label><textarea id="ev-notes" rows="2" placeholder="Budget, last conversation, what they care about..."></textarea></div>
+        <button class="btn-full btn-gold" onclick="addEvent()">Add Event — The Hand Will Brief You 30 Min Before</button>
+      </div>
+    </div>
+
+    <div class="sec">📋 Today's Events</div>
+    <div id="events-list"></div>
+
+    <div class="sec">📱 Your Phone Number</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="field"><label>The Hand texts you here</label><input type="tel" id="phone-num" placeholder="+1XXXXXXXXXX" /></div>
+        <button class="btn-full btn-gold" onclick="savePhone()">Save Number</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: FAMILY -->
+<div class="screen" id="screen-family">
+  <div class="screen-header">
+    <div class="sh-row">
+      <div>
+        <div class="sh-title">Family <span>Portal</span></div>
+        <div class="sh-date" id="fam-date"></div>
+      </div>
+      <div id="fam-badge" style="font-family:'DM Mono',monospace;font-size:0.9rem;color:#b43c3c"></div>
+    </div>
+  </div>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="famTab('inbox')">Inbox</button>
+    <button class="sub-tab" onclick="famTab('grocery')">Grocery</button>
+    <button class="sub-tab" onclick="famTab('drivers')">Drivers</button>
+    <button class="sub-tab" onclick="famTab('reviewed')">Reviewed</button>
+  </div>
+  <div class="pad">
+    <div id="fam-inbox"></div>
+    <div id="fam-grocery" style="display:none"></div>
+    <div id="fam-drivers" style="display:none"></div>
+    <div id="fam-reviewed" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SCREEN 4: FINANCIAL -->
+<div class="screen" id="screen-financial">
+  <div class="screen-header">
+    <div class="sh-row">
+      <div>
+        <div class="sh-title">Financial <span>Hand</span></div>
+        <div class="sh-date">Your Private Family Office</div>
+      </div>
+    </div>
+  </div>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="finTab('overview')">Overview</button>
+    <button class="sub-tab" onclick="finTab('grocery')">Grocery</button>
+    <button class="sub-tab" onclick="finTab('expenses')">Expenses</button>
+    <button class="sub-tab" onclick="finTab('tax')">Tax</button>
+  </div>
+  <div class="pad">
+    <div id="fin-overview"></div>
+    <div id="fin-grocery" style="display:none"></div>
+    <div id="fin-expenses" style="display:none"></div>
+    <div id="fin-tax" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SCREEN 5: HISTORY -->
+<div class="screen" id="screen-history">
+  <div class="screen-header">
+    <div class="sh-row">
+      <div>
+        <div class="sh-title">Track <span>Record</span></div>
+        <div class="sh-date">14-Day Performance</div>
+      </div>
+    </div>
+  </div>
+  <div class="pad">
+    <div id="history-content"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="nav">
+  <button class="nav-btn active" onclick="showScreen('today',this)">
+    <span class="nav-icon">☀️</span>
+    <span class="nav-label">Today</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('hand',this)" style="position:relative">
+    <span class="nav-icon">⚜️</span>
+    <span class="nav-label">The Hand</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('family',this)" style="position:relative">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Family</span>
+    <span class="nav-badge" id="fam-nav-badge" style="display:none"></span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('financial',this)">
+    <span class="nav-icon">💰</span>
+    <span class="nav-label">Financial</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('history',this)">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">History</span>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CREDENTIALS
+// ═══════════════════════════════════════════
+var ELEVEN_KEY=localStorage.getItem('el_key')||'';
+var ELEVEN_VOICE=localStorage.getItem('el_voice')||'yhf80q1381zd2JJQ4tM7';
+var TWILIO_SID=localStorage.getItem('tw_sid')||'';
+var TWILIO_TOKEN=localStorage.getItem('tw_token')||'';
+var TWILIO_FROM=localStorage.getItem('tw_from')||'+18556140108';
+
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+var OS_KEY='life_os_v3';
+var FAM_KEY='family_v3';
+var FIN_KEY='financial_v3';
+var HAND_KEY='hand_v3';
+
+var PILLARS={
+  body:    {label:'Body',    color:'#c8962a',light:'rgba(200,150,42,0.12)',dark:'#7a5500',icon:'⚡',score:6,tagline:'Your engine. Everything runs on this.'},
+  being:   {label:'Being',  color:'#4a7c59',light:'rgba(74,124,89,0.12)', dark:'#2a5a3a',icon:'🌿',score:5,tagline:'Your inner world. The man beneath the roles.'},
+  balance: {label:'Balance',color:'#3d5a80',light:'rgba(61,90,128,0.12)', dark:'#1a3a5c',icon:'⚖️',score:6,tagline:'Your people. Karen. Michael. Emma. Mason.'},
+  business:{label:'Business',color:'#b84c1e',light:'rgba(184,76,30,0.12)', dark:'#6a2000',icon:'🏹',score:4,tagline:'Your vehicle. Freedom runs through here.'},
+};
+
+var TASKS={
+  body:    [{id:'b1',text:'Morning walk — move the body, clear the mind'},{id:'b2',text:'Eat clean — fuel the rebuild'},{id:'b3',text:'No alcohol — this is the foundation'},{id:'b4',text:'In bed by 10:30 — protect the liver rebuild'},{id:'b5',text:'Handle sugar cravings with intent, not impulse'}],
+  being:   [{id:'be1',text:'20 min no-phone morning — silence before noise'},{id:'be2',text:'One moment of genuine gratitude — find it, name it'},{id:'be3',text:'Catch the emotional spiral early — pause before reacting'},{id:'be4',text:'No self-beating after mistakes — assess and move'},{id:'be5',text:'One honest conversation this week — no performance'}],
+  balance: [{id:'bal1',text:'Home prepped before kids arrive'},{id:'bal2',text:'One real conversation with Karen — connection, not logistics'},{id:'bal3',text:'Intentional moment with each kid today'},{id:'bal4',text:'Hold the standard — lovingly, consistently'},{id:'bal5',text:'Ask Karen for alignment — partnership, not permission'}],
+  business:[{id:'biz1',text:'5 personal touches — calls, texts, real connections'},{id:'biz2',text:'CRM open every morning — no exceptions'},{id:'biz3',text:'One piece of content this week — show up somewhere'},{id:'biz4',text:'Pipeline reviewed — what needs to move today?'},{id:'biz5',text:'Revenue hours protected — no admin before 11am'}],
+};
+
+var STORES=[
+  {id:'walmart',   name:'Walmart',       icon:'🔵',url:'walmart.com/grocery',dist:'3.2 mi'},
+  {id:'target',    name:'Target',        icon:'🎯',url:'target.com',         dist:'2.8 mi'},
+  {id:'publix',    name:'Publix',        icon:'🟢',url:'publix.com/shop',    dist:'4.1 mi'},
+  {id:'harristeeter',name:'Harris Teeter',icon:'🔴',url:'harristeeter.com',  dist:'5.6 mi'},
+  {id:'amazon',    name:'Amazon Fresh',  icon:'📦',url:'amazon.com/fresh',   dist:'Delivery'},
+];
+
+var TAX_STRATEGIES=[
+  {title:'Mileage Deduction',text:'Track every mile for showings, client meetings, and open houses. At IRS rates this is your biggest write-off.',savings:'$4,000–$8,000/yr',priority:'High'},
+  {title:'Home Office',text:'Deduct a portion of your mortgage, utilities, and insurance based on workspace percentage.',savings:'$1,800–$3,200/yr',priority:'High'},
+  {title:'Health Insurance',text:'Self-employed agents deduct 100% of health insurance premiums for yourself and family.',savings:'$6,000–$14,000/yr',priority:'High'},
+  {title:'SEP-IRA',text:'Contribute up to 25% of net income to a SEP-IRA. Reduces taxable income while building wealth.',savings:'Up to $66,000/yr',priority:'High'},
+  {title:'Marketing & Ads',text:'All social media ads, photography, signage, and website costs are fully deductible.',savings:'Varies',priority:'Medium'},
+  {title:'Quarterly Taxes',text:'You owe estimated taxes 4 times per year. Missing deadlines triggers penalties.',savings:'Avoid penalties',priority:'Critical'},
+];
+
+var QUARTERLY=[
+  {period:'Q1 2026',due:'April 15, 2026',paid:false},
+  {period:'Q2 2026',due:'June 16, 2026',paid:false},
+  {period:'Q3 2026',due:'September 15, 2026',paid:false},
+  {period:'Q4 2026',due:'January 15, 2027',paid:false},
+];
+
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+function loadOS(){try{return JSON.parse(localStorage.getItem(OS_KEY)||'{}');}catch(e){return{};}}
+function saveOS(d){try{localStorage.setItem(OS_KEY,JSON.stringify(d));}catch(e){}}
+function loadFam(){try{return JSON.parse(localStorage.getItem(FAM_KEY)||'{}');}catch(e){return{};}}
+function saveFam(d){try{localStorage.setItem(FAM_KEY,JSON.stringify(d));}catch(e){}}
+function loadFin(){try{return JSON.parse(localStorage.getItem(FIN_KEY)||'{}');}catch(e){return{};}}
+function saveFin(d){try{localStorage.setItem(FIN_KEY,JSON.stringify(d));}catch(e){}}
+function loadHand(){try{return JSON.parse(localStorage.getItem(HAND_KEY)||'{}');}catch(e){return{};}}
+function saveHand(d){try{localStorage.setItem(HAND_KEY,JSON.stringify(d));}catch(e){}}
+
+function getDayKey(off){var d=new Date();d.setDate(d.getDate()-off);return d.toISOString().slice(0,10);}
+function getTodayKey(){return getDayKey(0);}
+function getTodayData(){return loadOS()[getTodayKey()]||{};}
+function setTodayData(data){var s=loadOS();s[getTodayKey()]=data;saveOS(s);}
+
+function pillarScore(key){
+  var ch=getTodayData().checked||{};
+  var done=TASKS[key].filter(function(t){return ch[t.id];}).length;
+  return{done:done,total:TASKS[key].length,pct:Math.round(done/TASKS[key].length*100)};
+}
+function totalScore(){
+  var all=Object.keys(TASKS).reduce(function(a,k){return a.concat(TASKS[k]);},[]);
+  var ch=getTodayData().checked||{};
+  var done=all.filter(function(t){return ch[t.id];}).length;
+  return{done:done,total:all.length,pct:Math.round(done/all.length*100)};
+}
+function dayScore(dayKey){
+  var s=loadOS();var day=s[dayKey];if(!day)return 0;
+  var all=Object.keys(TASKS).reduce(function(a,k){return a.concat(TASKS[k]);},[]);
+  var ch=day.checked||{};
+  return Math.round(all.filter(function(t){return ch[t.id];}).length/all.length*100);
+}
+function getStreak(){var c=0;for(var i=0;i<30;i++){if(dayScore(getDayKey(i))<50)break;c++;}return c;}
+function getAvg7(){var s=0;for(var i=1;i<=7;i++)s+=dayScore(getDayKey(i));return Math.round(s/7);}
+function pillarDayScore(key,dayKey){
+  var s=loadOS();var day=s[dayKey];if(!day)return 0;
+  var ch=day.checked||{};
+  return Math.round(TASKS[key].filter(function(t){return ch[t.id];}).length/TASKS[key].length*100);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+var currentScreen='today';
+var currentFamTab='inbox';
+var currentFinTab='overview';
+
+function showScreen(id,btn){
+  currentScreen=id;
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderScreen(id);
+}
+
+function famTab(id){
+  currentFamTab=id;
+  document.querySelectorAll('.sub-tab').forEach(function(b){if(b.closest('#screen-family'))b.classList.remove('active');});
+  event.currentTarget.classList.add('active');
+  ['inbox','grocery','drivers','reviewed'].forEach(function(t){
+    document.getElementById('fam-'+t).style.display=t===id?'block':'none';
+  });
+  renderFamily();
+}
+
+function finTab(id){
+  currentFinTab=id;
+  document.querySelectorAll('.sub-tab').forEach(function(b){if(b.closest('#screen-financial'))b.classList.remove('active');});
+  event.currentTarget.classList.add('active');
+  ['overview','grocery','expenses','tax'].forEach(function(t){
+    document.getElementById('fin-'+t).style.display=t===id?'block':'none';
+  });
+  renderFinancial();
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+var toastTimer;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3000);
+}
+
+// ═══════════════════════════════════════════
+// SMS
+// ═══════════════════════════════════════════
+function getPhone(){return loadHand().phone||'';}
+function savePhone(){
+  var ph=document.getElementById('phone-num').value.trim();
+  if(!ph){toast('Please enter your phone number.');return;}
+  var d=loadHand();d.phone=ph;saveHand(d);
+  toast('Phone saved. The Hand will text you at '+ph);
+}
+
+function sendSMS(body){
+  var to=getPhone();if(!to)return;
+  var p=new URLSearchParams();p.append('To',to);p.append('From',TWILIO_FROM);p.append('Body',body);
+  fetch('https://api.twilio.com/2010-04-01/Accounts/'+TWILIO_SID+'/Messages.json',{
+    method:'POST',
+    headers:{'Authorization':'Basic '+btoa(TWILIO_SID+':'+TWILIO_TOKEN),'Content-Type':'application/x-www-form-urlencoded'},
+    body:p.toString()
+  }).catch(function(){});
+}
+
+// ═══════════════════════════════════════════
+// ELEVENLABS
+// ═══════════════════════════════════════════
+var currentAudio=null;var isLoading=false;
+
+function handlePlay(){
+  if(isLoading)return;
+  if(currentAudio){
+    if(!currentAudio.paused){currentAudio.pause();setPlayerUI('paused');}
+    else{currentAudio.play();setPlayerUI('playing');}
+    return;
+  }
+  isLoading=true;setPlayerUI('loading');
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/'+ELEVEN_VOICE,{
+    method:'POST',
+    headers:{'Accept':'audio/mpeg','Content-Type':'application/json','xi-api-key':ELEVEN_KEY},
+    body:JSON.stringify({text:generateBriefScript(),model_id:'eleven_turbo_v2_5',voice_settings:{stability:0.55,similarity_boost:0.80,style:0.12,use_speaker_boost:true}})
+  })
+  .then(function(r){if(!r.ok)throw new Error('Error '+r.status);return r.blob();})
+  .then(function(blob){
+    var url=URL.createObjectURL(blob);
+    currentAudio=new Audio(url);
+    currentAudio.onloadedmetadata=function(){document.getElementById('time-tot').textContent=fmtTime(currentAudio.duration);};
+    currentAudio.ontimeupdate=function(){
+      var pct=(currentAudio.currentTime/currentAudio.duration)*100;
+      document.getElementById('hand-progress').style.width=pct+'%';
+      document.getElementById('time-cur').textContent=fmtTime(currentAudio.currentTime);
+    };
+    currentAudio.onended=function(){setPlayerUI('replay');currentAudio=null;};
+    isLoading=false;currentAudio.play();setPlayerUI('playing');
+  })
+  .catch(function(err){isLoading=false;setPlayerUI('idle');toast('Voice error: '+err.message);});
+}
+
+function setPlayerUI(state){
+  var btn=document.getElementById('play-btn');
+  var icon=document.getElementById('play-icon');
+  var sub=document.getElementById('player-sub');
+  btn.classList.remove('playing');
+  if(state==='loading'){icon.textContent='...';sub.textContent='Preparing the brief...';}
+  else if(state==='playing'){icon.textContent='◼';sub.textContent='The Hand is speaking...';btn.classList.add('playing');}
+  else if(state==='paused'){icon.textContent='▶';sub.textContent='Paused — tap to continue';}
+  else if(state==='replay'){icon.textContent='↺';sub.textContent='Brief complete — tap to replay';}
+  else{icon.textContent='▶';sub.textContent='Tap to hear The Hand speak';}
+}
+
+function fmtTime(s){
+  if(!s||isNaN(s))return'0:00';
+  return Math.floor(s/60)+':'+(Math.floor(s%60)<10?'0':'')+Math.floor(s%60);
+}
+
+// ═══════════════════════════════════════════
+// HAND INTELLIGENCE
+// ═══════════════════════════════════════════
+function detectFlags(){
+  var flags=[];
+  var fd=loadFam();
+
+  Object.keys(PILLARS).forEach(function(key){
+    var scores=[1,2,3].map(function(i){return pillarDayScore(key,getDayKey(i));});
+    var dark=scores.every(function(s){return s===0;});
+    var declining=scores[0]<scores[1]&&scores[1]<=scores[2]&&scores[2]>0;
+    if(dark)flags.push({type:'red',title:PILLARS[key].label+' — Dark',text:'No activity in '+PILLARS[key].label+' for three consecutive days.'});
+    else if(declining)flags.push({type:'amber',title:PILLARS[key].label+' — Declining',text:PILLARS[key].label+' has declined three days running. Attention required.'});
+  });
+
+  var pending=(fd.requests||[]).filter(function(r){return r.status==='pending';});
+  var stale=pending.filter(function(r){return(Date.now()-r.id)/3600000>24;});
+  if(stale.length>0)flags.push({type:'amber',title:'Stale Family Requests',text:stale.length+' request'+(stale.length>1?'s have':' has')+' waited over 24 hours for your decision.'});
+
+  var bizAvg=Math.round([1,2,3].map(function(i){return pillarDayScore('business',getDayKey(i));}).reduce(function(a,b){return a+b;},0)/3);
+  if(bizAvg<40)flags.push({type:'red',title:'Revenue Risk',text:'Business averaging '+bizAvg+'% over three days. Pipeline gaps will materialise within weeks.'});
+
+  var str=getStreak();
+  if(str>=3)flags.push({type:'green',title:str+'-Day Streak Active',text:'Consistency is compounding. Protect the morning routine — it is the foundation.'});
+  if(flags.length===0)flags.push({type:'green',title:'All Clear',text:'No irregularities detected. Execute the War Map.'});
+  return flags;
+}
+
+function generateBriefScript(){
+  var yesterday=dayScore(getDayKey(1));
+  var weekAvg=getAvg7();
+  var str=getStreak();
+  var fd=loadFam();
+  var pendingCount=(fd.requests||[]).filter(function(r){return r.status==='pending';}).length;
+  var dayName=new Date().toLocaleDateString('en-US',{weekday:'long'});
+  var flags=detectFlags();
+  var topFlag=flags[0];
+  var bizAvg=Math.round([1,2,3].map(function(i){return pillarDayScore('business',getDayKey(i));}).reduce(function(a,b){return a+b;},0)/3);
+  var priority=pendingCount>0?'You have '+pendingCount+' pending family request'+(pendingCount>1?'s':'')+'. Decide before the day gains momentum.':'Today the priority is conversation. Five real touches. One genuine connection. That is the business.';
+  var risk=bizAvg<50?'The business pillar is the canary. When it dims, the financial pressure climbs and bleeds into every other area of your life.':'No acute risk. The Hand is watching the horizon so that you need not.';
+  return 'Good morning. It is '+dayName+'. I am the Hand, and this is your daily intelligence brief. Yesterday your completion stood at '+yesterday+' percent. Seven day average: '+weekAvg+' percent. Streak: '+str+' day'+(str!==1?'s':'')+'. '+(topFlag?topFlag.text+' ':'')+' Today\'s priority: '+priority+' Risk: '+risk+' '+(pendingCount>0?'Family inbox: '+pendingCount+' request'+(pendingCount>1?'s require':' requires')+' your decision.':'The family system is clear.')+' That concludes the morning brief. The realm is yours. Use the day well.';
+}
+
+// EVENTS
+function addEvent(){
+  var title=document.getElementById('ev-title').value.trim();
+  var time=document.getElementById('ev-time').value;
+  if(!title||!time){toast('Please add a title and time.');return;}
+  var d=loadHand();var events=d.events||[];
+  events.push({id:Date.now(),title:title,time:time,who:document.getElementById('ev-who').value.trim(),notes:document.getElementById('ev-notes').value.trim()});
+  events.sort(function(a,b){return new Date(a.time)-new Date(b.time);});
+  d.events=events;saveHand(d);
+  document.getElementById('ev-title').value='';document.getElementById('ev-time').value='';
+  document.getElementById('ev-who').value='';document.getElementById('ev-notes').value='';
+  toast('Event added. The Hand will brief you 30 min before.');
+  scheduleEventAlert(events[events.length-1]);
+  renderHand();
+}
+
+function scheduleEventAlert(ev){
+  var delay=new Date(ev.time).getTime()-30*60*1000-Date.now();
+  if(delay>0&&delay<24*60*60*1000){
+    setTimeout(function(){
+      var t=new Date(ev.time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      var msg='⚜️ The Hand: '+ev.title+' in 30 min ('+t+').';
+      if(ev.who)msg+=' With: '+ev.who+'.';
+      if(ev.notes)msg+=' Notes: '+ev.notes.slice(0,100);
+      sendSMS(msg);
+    },delay);
+  }
+}
+
+function deleteEvent(id){
+  var d=loadHand();d.events=(d.events||[]).filter(function(e){return e.id!==id;});saveHand(d);renderHand();
+}
+
+// ═══════════════════════════════════════════
+// FAMILY
+// ═══════════════════════════════════════════
+function approveReq(id){
+  var d=loadFam();var req=(d.requests||[]).find(function(r){return r.id===id;});
+  if(req){req.status='approved';req.approvedBy='Dad';req.approvedAt=new Date().toISOString();
+    if(req.driverSubmission){d.approvedDrivers=[...(d.approvedDrivers||[]),...req.details];d.driversPending=false;}
+    if(req.cat==='grocery'&&req.details&&req.details.items){
+      var fin=loadFin();var gl=fin.groceryList||[];
+      req.details.items.forEach(function(item){gl.push({id:Date.now()+Math.random(),item:item,qty:'1',who:req.who,notes:'',checked:false,store:null,price:null});});
+      fin.groceryList=gl;saveFin(fin);
+    }
+  }
+  saveFam(d);renderFamily();toast('Approved ✓');
+}
+
+function denyReq(id){
+  var d=loadFam();var req=(d.requests||[]).find(function(r){return r.id===id;});
+  if(req){req.status='denied';req.deniedBy='Dad';}
+  saveFam(d);renderFamily();toast('Denied.');
+}
+
+function whoColor(who){var c={Michael:'#7c6af0',Emma:'#e06080',Mason:'#e8a030',Karen:'#9b6af0'};return c[who]||'#aaa';}
+function catIcon(cat){var i={ride:'🚗',schedule:'📅',weekend:'🎉',grocery:'🛒',other:'💬',drivers:'🚗'};return i[cat]||'💬';}
+function fmtReqTime(iso){if(!iso)return'';var d=new Date(iso);return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+
+function renderDetailRows(cat,details){
+  if(!details)return'';var rows=[];
+  if(cat==='ride'){
+    if(details.destination)rows.push(['To',details.destination]);
+    if(details.depart)rows.push(['When',new Date(details.depart).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})]);
+    if(details.returnTime)rows.push(['Return',details.returnTime]);
+    if(details.driver)rows.push(['Driver',details.driver]);
+    if(details.whoElse)rows.push(['With',details.whoElse]);
+  }else if(cat==='schedule'){
+    if(details.what)rows.push(['Changing',details.what]);
+    if(details.newPlan)rows.push(['New plan',details.newPlan]);
+    if(details.reason)rows.push(['Reason',details.reason]);
+  }else if(cat==='weekend'){
+    if(details.location)rows.push(['Where',details.location]);
+    if(details.timespan)rows.push(['When',details.timespan]);
+    if(details.friends)rows.push(['With',details.friends]);
+    if(details.sleepover)rows.push(['Sleepover',details.sleepover==='yes'?'Yes':'No']);
+    if(details.parentName)rows.push(['Adult',details.parentName]);
+    if(details.parentPhone)rows.push(['Phone',details.parentPhone]);
+  }else if(cat==='grocery'){
+    if(details.items)rows.push(['Items',Array.isArray(details.items)?details.items.join(', '):details.items]);
+  }else if(cat==='drivers'&&Array.isArray(details)){
+    rows.push(['Drivers',details.map(function(d){return d.name+'('+d.rel+')'}).join(', ')]);
+  }else{
+    if(details.details)rows.push(['Details',details.details]);
+  }
+  return rows.map(function(r){return'<div class="rd-row"><div class="rd-key">'+r[0]+'</div><div class="rd-val">'+r[1]+'</div></div>';}).join('');
+}
+
+function reqCard(req,showActions){
+  return'<div class="req-card">'+
+    '<div class="req-hdr">'+
+      '<div>'+
+        '<div class="req-who" style="color:'+whoColor(req.who)+'">'+catIcon(req.cat)+' '+req.who+'</div>'+
+        '<div class="req-title-text">'+req.title+'</div>'+
+        '<div class="req-time-text">'+fmtReqTime(req.time)+'</div>'+
+      '</div>'+
+      '<div class="status-pill '+(req.status==='pending'?'pill-p':req.status==='approved'?'pill-a':'pill-d')+'">'+req.status+'</div>'+
+    '</div>'+
+    (req.details?'<div class="req-details">'+renderDetailRows(req.cat,req.details)+'</div>':'')+
+    (showActions?'<div class="action-row"><button class="approve-btn" onclick="approveReq('+req.id+')">✓ Approve</button><button class="deny-btn" onclick="denyReq('+req.id+')">✕ Deny</button></div>':'')+
+  '</div>';
+}
+
+// ═══════════════════════════════════════════
+// FINANCIAL
+// ═══════════════════════════════════════════
+function addGrocery(){
+  var item=document.getElementById('fgi-item').value.trim();
+  if(!item){toast('Please enter an item.');return;}
+  var d=loadFin();var list=d.groceryList||[];
+  list.push({id:Date.now(),item:item,qty:document.getElementById('fgi-qty').value.trim()||'1',who:document.getElementById('fgi-who').value,notes:document.getElementById('fgi-notes').value.trim(),checked:false,store:null,price:null});
+  d.groceryList=list;saveFin(d);
+  document.getElementById('fgi-item').value='';
+  toast('Added to grocery list.');renderFinancial();
+}
+
+function toggleGrocery(id){
+  var d=loadFin();var item=(d.groceryList||[]).find(function(g){return g.id===id;});
+  if(item)item.checked=!item.checked;saveFin(d);renderFinancial();
+}
+
+function removeGrocery(id){
+  var d=loadFin();d.groceryList=(d.groceryList||[]).filter(function(g){return g.id!==id;});saveFin(d);renderFinancial();
+}
+
+function optimizeGrocery(){
+  var d=loadFin();var list=(d.groceryList||[]).filter(function(g){return!g.checked;});
+  if(list.length===0){toast('No items on the list.');return;}
+  var prices={walmart:3.49,target:3.99,publix:4.29,harristeeter:4.49,amazon:3.89};
+  var rotation=['walmart','target','publix','harristeeter','amazon'];
+  var groups={};STORES.forEach(function(s){groups[s.id]=[];});
+  list.forEach(function(item,i){
+    var cat=(item.notes||'').toLowerCase();
+    var store;
+    if(cat.includes('organic')||cat.includes('fresh'))store='amazon';
+    else if(cat.includes('delivery')||cat.includes('urgent'))store='amazon';
+    else store=rotation[i%3];
+    item.store=store;item.price=prices[store];
+    groups[store].push(item);
+  });
+  d.groceryList=d.groceryList.map(function(g){var u=list.find(function(l){return l.id===g.id;});return u||g;});
+  d.storeGroups=groups;saveFin(d);
+  var total=list.reduce(function(s,g){return s+(g.price||0);},0);
+  var storeCount=Object.keys(groups).filter(function(k){return groups[k].length>0;}).length;
+  toast('Optimized across '+storeCount+' stores — est. $'+total.toFixed(2));
+  sendSMS('💰 Financial Hand: '+list.length+' grocery items optimized across '+storeCount+' stores. Est. total: $'+total.toFixed(2)+'. Orders ready for pickup.');
+  renderFinancial();
+}
+
+function addExpense(){
+  var name=document.getElementById('exp-name').value.trim();
+  var amount=parseFloat(document.getElementById('exp-amount').value);
+  if(!name||!amount){toast('Please enter description and amount.');return;}
+  var d=loadFin();var expenses=d.expenses||[];
+  expenses.push({id:Date.now(),name:name,amount:amount,cat:document.getElementById('exp-cat').value,date:document.getElementById('exp-date').value||getTodayKey(),deductible:document.getElementById('exp-ded').value});
+  d.expenses=expenses;saveFin(d);
+  document.getElementById('exp-name').value='';document.getElementById('exp-amount').value='';
+  if(document.getElementById('exp-cat').value==='kids'&&amount>100)sendSMS('💰 Financial Hand: Unusual kids expense — '+name+' ($'+amount.toFixed(2)+'). Review if expected.');
+  toast('Expense logged.'+(document.getElementById('exp-ded').value==='yes'?' Flagged as deductible.':''));
+  renderFinancial();
+}
+
+function addIncome(){
+  var source=document.getElementById('inc-source').value.trim();
+  var amount=parseFloat(document.getElementById('inc-amount').value);
+  if(!source||!amount){toast('Please enter source and amount.');return;}
+  var d=loadFin();var income=d.income||[];
+  income.push({id:Date.now(),source:source,amount:amount,date:document.getElementById('inc-date').value||getTodayKey()});
+  d.income=income;saveFin(d);
+  document.getElementById('inc-source').value='';document.getElementById('inc-amount').value='';
+  toast('Commission logged. Tax position updated.');renderFinancial();
+}
+
+function fmt(n){return'$'+parseFloat(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// ═══════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════
+function renderToday(){
+  var ts=totalScore();var str=getStreak();
+  var pctEl=document.getElementById('total-pct');
+  pctEl.textContent=ts.pct+'%';
+  pctEl.style.color=ts.pct>=80?'#4aad6a':ts.pct>=50?'#c8962a':'#b84c1e';
+  document.getElementById('total-sub').textContent=ts.done+'/'+ts.total+' · '+str+'d streak';
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  var mg=document.getElementById('mini-grid');mg.innerHTML='';
+  Object.entries(PILLARS).forEach(function(entry){
+    var key=entry[0];var p=entry[1];var s=pillarScore(key);
+    var div=document.createElement('div');div.className='mini-cell';
+    div.style.background=p.light;div.style.border='1px solid '+p.color+'33';
+    div.innerHTML='<div class="mc-label" style="color:'+p.color+'">'+p.label+'</div><div class="mc-val">'+s.done+'/'+s.total+'</div>';
+    mg.appendChild(div);
+  });
+
+  var d=getTodayData();var ch=d.checked||{};var notes=d.notes||{};
+  var html='';
+  Object.entries(PILLARS).forEach(function(entry){
+    var key=entry[0];var p=entry[1];var s=pillarScore(key);
+    html+='<div class="card" style="border-color:'+p.color+'22">'+
+      '<div class="card-hdr" style="background:'+p.light+'">'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span style="font-size:1.1rem">'+p.icon+'</span>'+
+          '<div><div style="font-family:\'Playfair Display\',serif;font-size:0.9rem;color:'+p.dark+';font-weight:500">'+p.label+'</div>'+
+          '<div style="font-size:0.58rem;color:'+p.dark+';opacity:0.6;margin-top:1px">'+p.tagline+'</div></div>'+
+        '</div>'+
+        '<div style="text-align:right"><div style="font-family:\'Playfair Display\',serif;font-size:1rem;color:'+p.color+'">'+s.done+'/'+s.total+'</div>'+
+        '<div class="prog" style="width:48px"><div class="prog-fill" style="width:'+s.pct+'%;background:'+p.color+'"></div></div></div>'+
+      '</div>'+
+      '<div class="card-body">';
+    TASKS[key].forEach(function(task){
+      var done=!!ch[task.id];
+      html+='<div class="task-row'+(done?' done':'')+'" onclick="toggleTask(\''+task.id+'\',\''+key+'\')">'+
+        '<div class="chk'+(done?' checked':'')+'" style="'+(done?'border-color:'+p.color+';background:'+p.color+';':'')+'">'+
+          (done?'✓':'')+'</div>'+
+        '<span class="task-text">'+task.text+'</span>'+
+      '</div>';
+    });
+    html+='<textarea class="note-field" rows="2" placeholder="'+p.label+' note..." onchange="saveNote(\''+key+'\',this.value)">'+
+      (notes[key]||'')+'</textarea></div></div>';
+  });
+  document.getElementById('today-content').innerHTML=html;
+}
+
+function toggleTask(id,pillar){
+  var d=getTodayData();var ch={...(d.checked||{})};ch[id]=!ch[id];setTodayData({...d,checked:ch});renderToday();
+}
+function saveNote(key,val){
+  var d=getTodayData();var n={...(d.notes||{})};n[key]=val;setTodayData({...d,notes:n});
+}
+
+function renderHand(){
+  var yesterday=dayScore(getDayKey(1));var weekAvg=getAvg7();var str=getStreak();
+  var fd=loadFam();var pendingCount=(fd.requests||[]).filter(function(r){return r.status==='pending';}).length;
+  var b1=pillarDayScore('body',getDayKey(1));var be1=pillarDayScore('being',getDayKey(1));
+  var bal1=pillarDayScore('balance',getDayKey(1));var biz1=pillarDayScore('business',getDayKey(1));
+
+  document.getElementById('brief-sections').innerHTML=[
+    {label:'Situation Report',text:'Yesterday: <em>'+yesterday+'%</em> · 7-day avg: <em>'+weekAvg+'%</em> · Streak: <em>'+str+'d</em>'},
+    {label:'Pillar Readings',text:'Body <strong>'+b1+'%</strong> · Being <strong>'+be1+'%</strong> · Balance <strong>'+bal1+'%</strong> · Business <strong>'+biz1+'%</strong>'},
+    {label:'Alliance Watch',text:pendingCount>0?'<em>'+pendingCount+' family request'+(pendingCount>1?'s':'')+' await your decision.</em>':'Family system clear. The household is in order.'},
+  ].map(function(s){return'<div class="brief-section"><div class="bs-label">'+s.label+'</div><div class="bs-text">'+s.text+'</div></div>';}).join('');
+
+  var flags=detectFlags();
+  var fc={red:'flag-red',amber:'flag-amber',green:'flag-green'};
+  document.getElementById('hand-flags').innerHTML=flags.map(function(f){
+    return'<div class="flag '+(fc[f.type]||'flag-amber')+'"><div class="flag-title">'+f.title+'</div><div class="flag-text">'+f.text+'</div></div>';
+  }).join('');
+
+  var bizAvg=Math.round([1,2,3].map(function(i){return pillarDayScore('business',getDayKey(i));}).reduce(function(a,b){return a+b;},0)/3);
+  document.getElementById('hand-priority').innerHTML=pendingCount>0
+    ?'<em>'+pendingCount+' pending family request'+(pendingCount>1?'s':'')+' in your inbox.</em> Decide before the day gains momentum.'
+    :'Today the priority is <em>conversation</em> — five real touches, one genuine connection.';
+  document.getElementById('hand-risk').innerHTML=bizAvg<50
+    ?'The <em>business pillar is the canary</em>. When it dims, the financial pressure climbs into every other area of your life.'
+    :'No acute risk. <em>The Hand watches the horizon</em> so that you need not.';
+
+  // Events
+  var d=loadHand();var today=getTodayKey();
+  var ph=d.phone||'';if(ph)document.getElementById('phone-num').value=ph;
+  var todayEvents=(d.events||[]).filter(function(e){return e.time&&e.time.slice(0,10)===today;});
+  document.getElementById('events-list').innerHTML=todayEvents.length===0
+    ?'<div class="empty">No events today. Add one above and The Hand will brief you before it starts.</div>'
+    :todayEvents.map(function(ev){
+      var t=new Date(ev.time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      return'<div class="card"><div class="card-body">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+          '<div><div style="font-size:0.8rem;color:#e8e0d0;font-weight:500">'+ev.title+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;font-size:0.5rem;color:#c8a84a;margin-top:2px">'+t+(ev.who?' · '+ev.who:'')+'</div>'+
+          (ev.notes?'<div style="font-size:0.65rem;color:#555;margin-top:4px;line-height:1.4">'+ev.notes.slice(0,80)+'</div>':'')+
+          '</div>'+
+          '<button onclick="deleteEvent('+ev.id+')" style="background:none;border:none;color:#333;cursor:pointer;font-size:0.75rem;padding:2px 6px">✕</button>'+
+        '</div>'+
+      '</div></div>';
+    }).join('');
+}
+
+function renderFamily(){
+  var fd=loadFam();
+  var requests=fd.requests||[];
+  var pending=requests.filter(function(r){return r.status==='pending'&&!r.driverSubmission;});
+  var reviewed=requests.filter(function(r){return r.status!=='pending';}).slice(0,10);
+  var gl=fd.groceryList||[];
+  var drivers=fd.approvedDrivers||[];
+  var driverReqs=requests.filter(function(r){return r.driverSubmission&&r.status==='pending';});
+
+  var badge=pending.length>0?pending.length+'⚡':'';
+  document.getElementById('fam-badge').textContent=badge;
+  var navBadge=document.getElementById('fam-nav-badge');
+  navBadge.style.display=pending.length>0?'block':'none';
+  document.getElementById('fam-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  // INBOX
+  document.getElementById('fam-inbox').innerHTML=
+    '<div class="sec">Pending ('+pending.length+')</div>'+
+    (pending.length===0?'<div class="empty">All clear — no pending requests.</div>':pending.map(function(r){return reqCard(r,true);}).join(''))+
+    (driverReqs.length>0?'<div class="sec">Driver List Approval</div>'+driverReqs.map(function(r){
+      return'<div class="card"><div class="card-body">'+
+        '<div style="font-size:0.78rem;color:#e8e0d0;margin-bottom:0.5rem">Driver list from <strong style="color:'+whoColor(r.who)+'">'+r.who+'</strong></div>'+
+        '<div style="font-size:0.68rem;color:#555;margin-bottom:0.6rem">'+r.details.map(function(d){return d.name+' ('+d.rel+')';}).join(' · ')+'</div>'+
+        '<div class="action-row" style="padding:0"><button class="approve-btn" onclick="approveReq('+r.id+')">✓ Approve All</button><button class="deny-btn" onclick="denyReq('+r.id+')">✕ Deny</button></div>'+
+      '</div></div>';
+    }).join(''):'');
+
+  // GROCERY from family portal
+  document.getElementById('fam-grocery').innerHTML=
+    '<div class="sec">Grocery Requests from Kids</div>'+
+    (gl.length===0?'<div class="empty">No grocery requests yet.</div>':
+      gl.map(function(g){
+        return'<div class="grocery-row">'+
+          '<div class="gr-name">'+g.item+'</div>'+
+          '<div class="gr-who">'+g.requestedBy+'</div>'+
+          '<div class="gr-store" style="font-size:0.52rem;'+(g.status==='pending'?'color:#c8a84a':'color:#4aad6a')+'">'+(g.status||'pending')+'</div>'+
+        '</div>';
+      }).join(''))+
+    '<div style="margin-top:0.75rem;font-size:0.65rem;color:#333;font-style:italic">Approved grocery requests automatically appear in your Financial Hand grocery list.</div>';
+
+  // DRIVERS
+  document.getElementById('fam-drivers').innerHTML=
+    '<div class="sec">Approved Drivers ('+drivers.length+')</div>'+
+    (drivers.length===0?'<div class="empty">No approved drivers yet. Drivers are submitted by the kids and approved by you or Karen.</div>':
+      drivers.map(function(d){
+        return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1a">'+
+          '<div><div style="font-size:0.75rem;color:#e8e0d0">'+d.name+'</div><div style="font-size:0.6rem;color:#555">'+d.rel+'</div></div>'+
+          '<div style="color:#4aad6a;font-size:0.62rem">✓ Approved</div>'+
+        '</div>';
+      }).join(''));
+
+  // REVIEWED
+  document.getElementById('fam-reviewed').innerHTML=
+    '<div class="sec">Recently Reviewed</div>'+
+    (reviewed.length===0?'<div class="empty">No reviewed requests yet.</div>':reviewed.map(function(r){return reqCard(r,false);}).join(''));
+}
+
+function renderFinancial(){
+  var d=loadFin();
+  var income=d.income||[];var expenses=d.expenses||[];var list=d.groceryList||[];
+  var totalIncome=income.reduce(function(s,i){return s+i.amount;},0);
+  var deductible=expenses.filter(function(e){return e.deductible==='yes';}).reduce(function(s,e){return s+e.amount;},0);
+  var thisMonth=new Date().toISOString().slice(0,7);
+  var monthlyExp=expenses.filter(function(e){return e.date&&e.date.slice(0,7)===thisMonth;});
+  var monthTotal=monthlyExp.reduce(function(s,e){return s+e.amount;},0);
+  var kidExp=expenses.filter(function(e){return e.cat==='kids';}).reduce(function(s,e){return s+e.amount;},0);
+  var netIncome=Math.max(0,totalIncome-deductible);
+  var totalTax=(netIncome*0.1413)+(netIncome*0.22);
+  var quarterly=totalTax/4;
+
+  // OVERVIEW
+  var alerts=[];
+  if(totalIncome===0)alerts.push({type:'amber',title:'No Income Logged',text:'Log your commissions in the Tax tab to track your real-time tax position.'});
+  if(deductible<500&&totalIncome>5000)alerts.push({type:'amber',title:'Low Deductions',text:'You have '+fmt(totalIncome)+' in income but only '+fmt(deductible)+' in deductions. You are likely missing significant write-offs.'});
+  if(kidExp>300)alerts.push({type:'red',title:'Kids Spending Alert',text:'Kids expenses are above $300 this month. Review recent requests for irregularities.'});
+  var nextQ=QUARTERLY.find(function(q){return!q.paid&&new Date(q.due)>new Date();});
+  if(nextQ){var daysOut=Math.round((new Date(nextQ.due)-new Date())/86400000);if(daysOut<45)alerts.push({type:'red',title:'Quarterly Tax Due in '+daysOut+' Days',text:nextQ.period+' estimated payment of '+fmt(quarterly)+' due '+nextQ.due+'.'});}
+  if(list.filter(function(g){return!g.checked;}).length>0&&!d.storeGroups)alerts.push({type:'amber',title:'Grocery List Needs Optimization',text:'You have items on the grocery list. Tap Grocery → Optimize to prepare store orders.'});
+  if(alerts.length===0)alerts.push({type:'green',title:'Financial Systems Clear',text:'No urgent flags. The team is monitoring everything.'});
+
+  document.getElementById('fin-overview').innerHTML=
+    '<div class="fin-metric">'+
+      '<div class="fm-item"><div class="fm-label">YTD Income</div><div class="fm-val" style="color:#4aad6a">'+fmt(totalIncome)+'</div><div class="fm-sub">logged</div></div>'+
+      '<div class="fm-item"><div class="fm-label">Deductions</div><div class="fm-val" style="color:#c8a84a">'+fmt(deductible)+'</div><div class="fm-sub">tracked</div></div>'+
+      '<div class="fm-item"><div class="fm-label">Est. Tax</div><div class="fm-val" style="color:#d07070">'+fmt(totalTax)+'</div><div class="fm-sub">owed</div></div>'+
+    '</div>'+
+    '<div class="sec"><span class="alert-dot"></span>Financial Alerts</div>'+
+    alerts.map(function(a){return'<div class="alert-item ai-'+a.type+'"><div class="ai-title">'+a.title+'</div><div class="ai-text">'+a.text+'</div></div>';}).join('');
+
+  // GROCERY
+  var unchecked=list.filter(function(g){return!g.checked;});
+  var groups=d.storeGroups;
+  var groceryHTML='<div class="card"><div class="card-body">'+
+    '<div class="field"><label>Item</label><input type="text" id="fgi-item" placeholder="Milk, chicken, paper towels..." /></div>'+
+    '<div class="two-col">'+
+      '<div class="field"><label>Quantity</label><input type="text" id="fgi-qty" placeholder="2 gallons..." /></div>'+
+      '<div class="field"><label>Requested by</label><select id="fgi-who"><option>Dad</option><option>Karen</option><option>Michael</option><option>Emma</option><option>Mason</option></select></div>'+
+    '</div>'+
+    '<div class="field"><label>Notes</label><input type="text" id="fgi-notes" placeholder="Brand, urgency..." /></div>'+
+    '<button class="btn-full btn-green" onclick="addGrocery()">Add to List</button>'+
+  '</div></div>'+
+  '<div class="sec">List ('+unchecked.length+' items)</div>'+
+  (list.length===0?'<div class="empty">No items yet.</div>':
+    list.map(function(g){
+      return'<div class="grocery-row">'+
+        '<div class="gr-check'+(g.checked?' checked':'')+'" onclick="toggleGrocery('+g.id+')">'+(g.checked?'✓':'')+'</div>'+
+        '<div class="gr-name" style="'+(g.checked?'text-decoration:line-through;opacity:0.4':'')+'">'+g.item+' <span style="color:#333;font-size:0.65rem">'+g.qty+'</span></div>'+
+        '<div class="gr-who">'+g.who+'</div>'+
+        (g.store?'<div class="gr-store">'+STORES.find(function(s){return s.id===g.store;}).name+'</div>':'')+
+        '<span onclick="removeGrocery('+g.id+')" style="color:#333;cursor:pointer;font-size:0.7rem;padding:0 4px">✕</span>'+
+      '</div>';
+    }).join(''))+
+  '<button class="btn-full btn-green" onclick="optimizeGrocery()" style="margin-top:0.75rem">⚡ Optimize & Prepare Orders</button>'+
+  (groups?'<div class="sec" style="margin-top:1rem">Store Orders Ready</div>'+
+    STORES.map(function(s){
+      var items=(groups[s.id]||[]);if(items.length===0)return'';
+      var subtotal=items.reduce(function(sum,g){return sum+(g.price||0);},0);
+      return'<div class="store-order">'+
+        '<div class="so-hdr"><div class="so-name">'+s.icon+' '+s.name+'</div><div class="so-total">'+fmt(subtotal)+'</div></div>'+
+        '<div class="so-items">'+items.map(function(g){return g.item+' ('+g.qty+')';}).join(' · ')+'</div>'+
+        '<div style="font-family:\'DM Mono\',monospace;font-size:0.44rem;color:#333;margin-bottom:0.5rem">'+s.dist+'</div>'+
+        '<div class="so-btns">'+
+          '<button class="so-btn so-primary" onclick="window.open(\'https://'+s.url+'\',\'_blank\')">Open '+s.name+'</button>'+
+          '<button class="so-btn so-secondary" onclick="sendSMS(\'💰 Financial Hand — '+s.name+' list:\\n'+items.map(function(g,i){return (i+1)+'. '+g.item+' ('+g.qty+')';}).join('\\n')+'\')" style="background:rgba(74,173,106,0.08);border:1px solid rgba(74,173,106,0.2);color:#4aad6a">✉ Text</button>'+
+        '</div>'+
+      '</div>';
+    }).join(''):'');
+  document.getElementById('fin-grocery').innerHTML=groceryHTML;
+
+  // EXPENSES
+  document.getElementById('fin-expenses').innerHTML=
+    '<div class="card"><div class="card-body">'+
+      '<div class="field"><label>Description</label><input type="text" id="exp-name" placeholder="Grocery run, utility, activity..." /></div>'+
+      '<div class="two-col">'+
+        '<div class="field"><label>Amount</label><input type="number" id="exp-amount" placeholder="0.00" /></div>'+
+        '<div class="field"><label>Category</label><select id="exp-cat"><option value="groceries">Groceries</option><option value="utilities">Utilities</option><option value="kids">Kids</option><option value="business">Business</option><option value="dining">Dining</option><option value="household">Household</option><option value="medical">Medical</option><option value="other">Other</option></select></div>'+
+      '</div>'+
+      '<div class="two-col">'+
+        '<div class="field"><label>Date</label><input type="date" id="exp-date" /></div>'+
+        '<div class="field"><label>Deductible?</label><select id="exp-ded"><option value="no">No</option><option value="yes">Yes — Business</option><option value="partial">Partial</option></select></div>'+
+      '</div>'+
+      '<button class="btn-full btn-gold" onclick="addExpense()">Log Expense</button>'+
+    '</div></div>'+
+    '<div class="sec">This Month ('+fmt(monthTotal)+')</div>'+
+    (monthlyExp.length===0?'<div class="empty">No expenses logged this month.</div>':
+      monthlyExp.slice(0,15).map(function(e){
+        return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1a">'+
+          '<div><div style="font-size:0.73rem;color:#e8e0d0">'+e.name+'</div><div style="font-family:\'DM Mono\',monospace;font-size:0.44rem;color:#333">'+e.cat+' · '+e.date+'</div></div>'+
+          '<div style="text-align:right"><div style="font-family:
+'DM Mono\',monospace;font-size:0.72rem;color:#e8e0d0">'+fmt(e.amount)+'</div>'+
+          (e.deductible==='yes'?'<div style="font-size:0.52rem;color:#4aad6a">✓ Deductible</div>':'')+
+          '</div></div>';
+      }).join(''));
+
+  // TAX
+  var totalTaxCalc=(netIncome*0.1413)+(netIncome*0.22);
+  var quarterlyAmt=totalTaxCalc/4;
+  document.getElementById('fin-tax').innerHTML=
+    '<div class="fin-metric">'+
+      '<div class="fm-item"><div class="fm-label">Gross Income</div><div class="fm-val" style="color:#4aad6a">'+fmt(totalIncome)+'</div></div>'+
+      '<div class="fm-item"><div class="fm-label">Deductions</div><div class="fm-val" style="color:#c8a84a">'+fmt(deductible)+'</div></div>'+
+      '<div class="fm-item"><div class="fm-label">Est. Tax</div><div class="fm-val" style="color:#d07070">'+fmt(totalTaxCalc)+'</div></div>'+
+    '</div>'+
+    '<div class="card"><div class="card-body">'+
+      '<div class="field"><label>Commission / Income Source</label><input type="text" id="inc-source" placeholder="Closing address or client..." /></div>'+
+      '<div class="two-col">'+
+        '<div class="field"><label>Gross Amount</label><input type="number" id="inc-amount" placeholder="0.00" /></div>'+
+        '<div class="field"><label>Date</label><input type="date" id="inc-date" /></div>'+
+      '</div>'+
+      '<button class="btn-full btn-gold" onclick="addIncome()">Log Commission</button>'+
+    '</div></div>'+
+    '<div class="sec">Tax Strategies</div>'+
+    TAX_STRATEGIES.map(function(s){
+      var c=s.priority==='Critical'?'red':s.priority==='High'?'amber':'green';
+      return'<div class="alert-item ai-'+c+'"><div class="ai-title">'+s.title+'</div><div class="ai-text">'+s.text+'</div><div style="font-size:0.6rem;color:#4aad6a;margin-top:3px">'+s.savings+'</div></div>';
+    }).join('')+
+    '<div class="sec" style="margin-top:1rem">Quarterly Estimated Payments</div>'+
+    QUARTERLY.map(function(q){
+      var isPast=new Date(q.due)<new Date();
+      var c=isPast&&!q.paid?'#d07070':q.paid?'#4aad6a':'#c8a84a';
+      return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1a">'+
+        '<div><div style="font-size:0.75rem;color:#e8e0d0">'+q.period+'</div><div style="font-family:\'DM Mono\',monospace;font-size:0.44rem;color:#333">Due: '+q.due+'</div></div>'+
+        '<div style="text-align:right"><div style="font-family:\'DM Mono\',monospace;font-size:0.72rem;color:'+c+'">'+fmt(quarterlyAmt)+'</div>'+
+        '<div style="font-size:0.52rem;color:'+c+';margin-top:1px">'+(q.paid?'✓ Paid':isPast?'⚠ Overdue':'Upcoming')+'</div></div>'+
+      '</div>';
+    }).join('');
+}
+
+function renderHistory(){
+  var html='';
+  for(var i=0;i<14;i++){
+    var pct=dayScore(getDayKey(i));
+    var fc=pct>=80?'#4aad6a':pct>=50?'#c8962a':pct>0?'#b84c1e':'#1e1e1e';
+    var lbl=i===0?'Today':i===1?'Yesterday':new Date(getDayKey(i)+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    html+='<div class="hist-row">'+
+      '<div class="hist-date'+(i===0?' today':'')+'">'+lbl+'</div>'+
+      '<div class="hist-bar"><div class="hist-fill" style="width:'+pct+'%;background:'+fc+'"></div></div>'+
+      '<div class="hist-pct" style="color:'+(pct>0?fc:'#333')+'">'+( pct>0?pct+'%':'—')+'</div>'+
+    '</div>';
+  }
+  html+='<div class="north-star">'+
+    '<div class="ns-label">★ North Star</div>'+
+    '<div class="ns-text">To become <em>financially free</em> and physically strong — so I can be fully present for Karen, Michael, Emma, and Mason. Not managing life. <em>Living it.</em></div>'+
+    '<div class="ns-targets">'+
+      '<div class="ns-t"><div class="ns-tl">Volume</div><div class="ns-tv">$40–50M</div><div class="ns-ts">End of year</div></div>'+
+      '<div class="ns-t"><div class="ns-tl">Deals</div><div class="ns-tv">3/month</div><div class="ns-ts">Minimum</div></div>'+
+      '<div class="ns-t"><div class="ns-tl">Body</div><div class="ns-tv">185–195</div><div class="ns-ts">Athletic</div></div>'+
+    '</div>'+
+  '</div>';
+  document.getElementById('history-content').innerHTML=html;
+}
+
+function renderScreen(id){
+  if(id==='today')renderToday();
+  else if(id==='hand')renderHand();
+  else if(id==='family')renderFamily();
+  else if(id==='financial')renderFinancial();
+  else if(id==='history')renderHistory();
+}
+
+function runMonitor(){
+  var flags=detectFlags();
+  var redFlags=flags.filter(function(f){return f.type==='red';});
+  if(redFlags.length>0){
+    var d=loadHand();var lastAlert=d.lastRedAlert||0;
+    if(Date.now()-lastAlert>3600000){
+      sendSMS('⚜️ The Hand: '+redFlags[0].title+' — '+redFlags[0].text);
+      d.lastRedAlert=Date.now();saveHand(d);
+    }
+  }
+  var fd=loadFam();
+  var pending=(fd.requests||[]).filter(function(r){return r.status==='pending';});
+  if(pending.length>0){
+    var d2=loadHand();var lastFam=d2.lastFamAlert||0;
+    if(Date.now()-lastFam>7200000){
+      sendSMS('⚜️ The Hand: '+pending.length+' family request'+(pending.length>1?'s require':' requires')+' your decision.');
+      d2.lastFamAlert=Date.now();saveHand(d2);
+    }
+  }
+}
+
+
+// FIRST RUN SETUP
+function checkSetup(){
+  if(!localStorage.getItem('el_key')||!localStorage.getItem('tw_sid')){
+    document.getElementById('setup-overlay').style.display='flex';
+  }
+}
+function saveCredentials(){
+  var el=document.getElementById('s-el-key').value.trim();
+  var tw=document.getElementById('s-tw-sid').value.trim();
+  var tt=document.getElementById('s-tw-token').value.trim();
+  var ph=document.getElementById('s-phone').value.trim();
+  if(!el||!tw||!tt||!ph){alert('Please fill in all fields.');return;}
+  localStorage.setItem('el_key',el);
+  localStorage.setItem('tw_sid',tw);
+  localStorage.setItem('tw_token',tt);
+  localStorage.setItem('tw_from','+18556140108');
+  var d=loadHand();d.phone=ph;saveHand(d);
+  // Update runtime variables
+  ELEVEN_KEY=el;TWILIO_SID=tw;TWILIO_TOKEN=tt;
+  document.getElementById('setup-overlay').style.display='none';
+  toast('Setup complete. Welcome to your Life OS.');
+  renderToday();
+}
+checkSetup();
+renderToday();
+setInterval(runMonitor,15*60*1000);
+setInterval(function(){if(currentScreen==='today')renderToday();else if(currentScreen==='family')renderFamily();},60*1000);
+</script>
+
+<!-- SETUP OVERLAY -->
+<div id="setup-overlay" style="display:none;position:fixed;inset:0;background:#0a0a0a;z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:2rem;">
+  <div style="font-size:2.5rem;margin-bottom:1rem">⚜️</div>
+  <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#c8a84a;margin-bottom:0.4rem">Welcome to Life OS</div>
+  <div style="font-family:'DM Mono',monospace;font-size:0.46rem;letter-spacing:0.12em;text-transform:uppercase;color:#333;margin-bottom:2rem">One-time setup — your credentials stay on your device only</div>
+  <div style="width:100%;max-width:360px">
+    <div style="margin-bottom:0.85rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:0.35rem">ElevenLabs API Key</div>
+      <input id="s-el-key" type="password" placeholder="sk_..." style="width:100%;background:#111;border:1px solid #222;border-radius:6px;padding:10px 12px;color:#e8e0d0;font-family:'DM Mono',monospace;font-size:0.72rem;outline:none;" />
+    </div>
+    <div style="margin-bottom:0.85rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:0.35rem">Twilio Account SID</div>
+      <input id="s-tw-sid" type="password" placeholder="AC..." style="width:100%;background:#111;border:1px solid #222;border-radius:6px;padding:10px 12px;color:#e8e0d0;font-family:'DM Mono',monospace;font-size:0.72rem;outline:none;" />
+    </div>
+    <div style="margin-bottom:0.85rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:0.35rem">Twilio Auth Token</div>
+      <input id="s-tw-token" type="password" placeholder="Your auth token..." style="width:100%;background:#111;border:1px solid #222;border-radius:6px;padding:10px 12px;color:#e8e0d0;font-family:'DM Mono',monospace;font-size:0.72rem;outline:none;" />
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:0.35rem">Your Phone Number</div>
+      <input id="s-phone" type="tel" placeholder="+1XXXXXXXXXX" style="width:100%;background:#111;border:1px solid #222;border-radius:6px;padding:10px 12px;color:#e8e0d0;font-family:'DM Mono',monospace;font-size:0.72rem;outline:none;" />
+    </div>
+    <button onclick="saveCredentials()" style="width:100%;padding:0.9rem;background:linear-gradient(135deg,#8a6820,#c8a84a);border:none;border-radius:6px;color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;">Activate Life OS</button>
+    <div style="font-size:0.6rem;color:#222;text-align:center;margin-top:0.75rem;line-height:1.6">Your credentials are stored only on your device.<br>They are never sent anywhere except directly to ElevenLabs and Twilio.</div>
+  </div>
+</div>
+</body>
+</html>
